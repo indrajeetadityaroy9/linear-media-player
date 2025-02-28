@@ -92,6 +92,7 @@ const MusicPlayer: FC<MusicPlayerProps> = () => {
       }
       setProgress(0);
       setCurrentTime(0);
+      setTrackPlaying(true);
     } else {
       nextTrack();
     }

@@ -1,3 +1,6 @@
+# Implementation Screenshot
+![alt text](<Screenshot 2025-02-28 at 11.36.24 AM.png>)
+
 # Linear Media Player
 
 Hey, thanks for taking the time to work on this exercise. We're excited to see what you come up with –

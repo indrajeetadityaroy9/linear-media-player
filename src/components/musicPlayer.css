@@ -1,0 +1,89 @@
+
+.music-player {
+    max-width: 500px;
+    margin: 2rem auto;
+    padding: 1rem;
+    border: 1px solid black;
+    border-radius: 8px;
+    text-align: center;
+    font-family: sans-serif;
+  }
+  
+  .playlist-select {
+    margin-bottom: 1rem;
+    border: 1px solid black;
+  }
+  
+  .playlist-header {
+    margin-bottom: 1rem;
+  }
+  
+  .track-cards-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    scroll-behavior: smooth;
+    scroll-snap-type: x mandatory;
+  }
+  
+  .track-card {
+    flex: 0 0 150px;
+    aspect-ratio: 1 / 1;
+    background-color: gainsboro;
+    border: 1px solid black;
+    border-radius: 4px;
+    padding: 0.5rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    transition: transform 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+    scroll-snap-align: center;
+    box-sizing: border-box;
+  }  
+  
+  .track-card.active {
+    border-color: black;
+    background-color: #1ED760;
+    transform: scale(1.1);
+  }
+  
+  .progress-slider-container {
+    margin: 1rem 0;
+  }
+  
+  .time-container {
+    display: flex;
+    align-items: center;
+  }
+  
+  .time-current,
+  .time-duration {
+    font-size: 0.9rem;
+    width: 50px;
+  }
+  
+  .time-current {
+    text-align: left;
+  }
+  
+  .time-duration {
+    text-align: right;
+  }
+  
+  .MuiSlider-root {
+    flex: 1;
+    margin: 0 8px;
+  }
+  
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+  }  
+  

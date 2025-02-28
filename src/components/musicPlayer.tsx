@@ -1,11 +1,11 @@
-// src/components/AudioPlayer.jsx
-import React, { useState, useRef, useEffect } from 'react';
+// src/components/MusicPlayer.tsx
+import { useState, useRef, useEffect, FC, SyntheticEvent } from 'react';
 import ReactPlayer from 'react-player';
 import IconButton from '@mui/material/IconButton';
 import Slider from '@mui/material/Slider';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import Select from '@mui/material/Select';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -16,37 +16,57 @@ import FastRewindIcon from '@mui/icons-material/FastRewind';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import RepeatOneIcon from '@mui/icons-material/RepeatOne';
 import ShuffleIcon from '@mui/icons-material/Shuffle';
-import data from '../data/playlists.json';
+import dataJson from '../data/playlists.json';
 import './musicPlayer.css';
 
-const MusicPlayer = () => {
+//Interfaces for data structures
+interface Track {
+  name: string;
+  url: string;
+  duration: number;
+}
+interface Playlist {
+  name: string;
+  'artist:': string;
+  year: number;
+  tracks: Track[];
+}
+interface Data {
+  playlists: Playlist[];
+}
+//Cast JSON data to Data interface
+const data = dataJson as Data;
+//MusicPlayer arguments
+interface MusicPlayerProps {}
+
+const MusicPlayer: FC<MusicPlayerProps> = () => {
   //Playlist and Track State
-  const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState(0);
+  const [selectedPlaylistIndex, setSelectedPlaylistIndex] = useState<number>(0);
   //Get the currently selected playlist and its tracks from the JSON data
   const playlist = data.playlists[selectedPlaylistIndex];
   const tracks = playlist.tracks;
 
   //Playback State and Timing
-  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [trackPlaying, setTrackPlaying] = useState(false);
-  const [trackRepeat, setTrackRepeat] = useState(false);
+  const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [trackPlaying, setTrackPlaying] = useState<boolean>(false);
+  const [trackRepeat, setTrackRepeat] = useState<boolean>(false);
 
   //Track progress is stored as a percentage (0 - 100)
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<number>(0);
   //Current time in seconds and total duration of the track
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
 
   //Refs for Player and UI Elements
   //Ref for the ReactPlayer component
-  const playerRef = useRef(null);
+  const playerRef = useRef<ReactPlayer | null>(null);
   //Ref for the container that holds track cards
-  const cardsContainerRef = useRef(null);
+  const cardsContainerRef = useRef<HTMLDivElement | null>(null);
   //Array of refs for each individual track card
-  const cardRefs = useRef([]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   //Format a time in seconds to a mm:ss string
-  const formatTime = (seconds) => {
+  const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${minutes}:${secs < 10 ? '0' : ''}${secs}`;
@@ -54,13 +74,13 @@ const MusicPlayer = () => {
 
   //ReactPlayer Callback Handlers
   //Update progress and current time based on ReactPlayer's progress event
-  const handleTrackProgress = (state) => {
+  const handleTrackProgress = (state: { played: number; playedSeconds: number }) => {
     setProgress(state.played * 100);
     setCurrentTime(state.playedSeconds);
   };
 
   //Set the total duration when ReactPlayer loads track
-  const handleTrackDuration = (dur) => {
+  const handleTrackDuration = (dur: number) => {
     setDuration(dur);
   };
 
@@ -119,22 +139,34 @@ const MusicPlayer = () => {
 
   //Slider Handlers for Progress Bar
   //Update the progress state while the slider is being dragged
-  const handleSliderChange = (event, newValue) => {
-    setProgress(newValue);
-  };
-  //When slider drag is finished, calculate new current track time and move to the new playback position
-  const handleSliderChangeOnFinish = (event, newValue) => {
-    const newTime = (newValue / 100) * duration;
-    if (playerRef.current) {
-      playerRef.current.seekTo(newTime, 'seconds');
+  const handleSliderChange = (
+    _event: Event | SyntheticEvent<Element, Event>,
+    newValue: number | number[]
+  ) => {
+    if (typeof newValue === 'number') {
+      setProgress(newValue);
     }
-    setCurrentTime(newTime);
+  };
+
+  //When slider drag is finished, calculate new current track time and move to the new playback position 
+  const handleSliderChangeOnFinish = (
+    _event: Event | SyntheticEvent<Element, Event>,
+    newValue: number | number[]
+  ) => {
+    if (typeof newValue === 'number') {
+      const newTime = (newValue / 100) * duration;
+      if (playerRef.current) {
+        playerRef.current.seekTo(newTime, 'seconds');
+      }
+      setCurrentTime(newTime);
+    }
   };
 
   //When the current track index changes, scroll the corresponding track card into view
   useEffect(() => {
-    if (cardRefs.current[currentTrackIndex]) {
-      cardRefs.current[currentTrackIndex].scrollIntoView({
+    const card = cardRefs.current[currentTrackIndex];
+    if (card) {
+      card.scrollIntoView({
         behavior: 'smooth',
         inline: 'center',
         block: 'nearest',
@@ -144,6 +176,7 @@ const MusicPlayer = () => {
 
   return (
     <div className="music-player">
+      {/* Playlist dropdown */}
       <FormControl fullWidth variant="outlined" className="playlist-select">
         <InputLabel id="playlist-select-label">Playlist</InputLabel>
         <Select
@@ -151,8 +184,9 @@ const MusicPlayer = () => {
           id="playlist-select"
           value={selectedPlaylistIndex}
           label="Playlist"
-          onChange={(e) => {
-            setSelectedPlaylistIndex(e.target.value);
+          onChange={(e: SelectChangeEvent<number>) => {
+            const newIndex = Number(e.target.value);
+            setSelectedPlaylistIndex(newIndex);
             setCurrentTrackIndex(0);
             setProgress(0);
             setCurrentTime(0);
@@ -171,6 +205,7 @@ const MusicPlayer = () => {
         </Select>
       </FormControl>
 
+      {/* Playlist info */}
       <header className="playlist-header">
         <h1>{playlist.name}</h1>
         <p>
@@ -178,12 +213,13 @@ const MusicPlayer = () => {
         </p>
       </header>
 
+      {/* Track cards */}
       <div className="track-cards-container" ref={cardsContainerRef}>
         {tracks.map((track, index) => (
           <div
             key={index}
             ref={(el) => (cardRefs.current[index] = el)}
-            className={`track-card ${index === currentTrackIndex ? 'active' : ''}`}
+            className={`track-card ${index === currentTrackIndex ? "active" : ""}`}
             onClick={() => {
               setCurrentTrackIndex(index);
               setProgress(0);
@@ -195,6 +231,7 @@ const MusicPlayer = () => {
         ))}
       </div>
 
+      {/* ReactPlayer */}
       <ReactPlayer
         ref={playerRef}
         url={tracks[currentTrackIndex].url}
@@ -206,6 +243,7 @@ const MusicPlayer = () => {
         height="0"
       />
 
+      {/* Progress bar with time display */}
       <div className="progress-slider-container">
         <div className="time-container">
           <div className="time-current">{formatTime(currentTime)}</div>
@@ -215,16 +253,17 @@ const MusicPlayer = () => {
             onChangeCommitted={handleSliderChangeOnFinish}
             aria-labelledby="progress-slider"
             valueLabelDisplay="off"
-            sx={{ color: '#1ED760' }}
+            sx={{ color: "#1ED760" }}
           />
           <div className="time-duration">{formatTime(duration)}</div>
         </div>
       </div>
 
+      {/* Track Playback Controls */}
       <div className="controls">
         <IconButton onClick={() => setTrackRepeat(!trackRepeat)} aria-label="Toggle trackRepeat">
           {trackRepeat ? (
-            <RepeatOneIcon fontSize="large" color="#1ED760" />
+            <RepeatOneIcon fontSize="large" sx={{ color: "#1ED760" }} />
           ) : (
             <RepeatIcon fontSize="large" />
           )}
@@ -235,7 +274,7 @@ const MusicPlayer = () => {
         <IconButton onClick={bufferBackward}>
           <FastRewindIcon fontSize="large" />
         </IconButton>
-        <IconButton onClick={togglePlayPause} aria-label={trackPlaying ? 'Pause' : 'Play'}>
+        <IconButton onClick={togglePlayPause} aria-label={trackPlaying ? "Pause" : "Play"}>
           {trackPlaying ? <PauseIcon fontSize="large" /> : <PlayArrowIcon fontSize="large" />}
         </IconButton>
         <IconButton onClick={bufferForward}>
